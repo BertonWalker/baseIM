@@ -82,6 +82,7 @@ const submitForm = (formEle: FormInstance) => {
   }
   formEle.validate((valid) => {
     if (valid) {
+      console.log(111111111111111)
       DoLogin(formData.phoneNumber, formData.password).then((resp) => {
         console.log(resp);
         if (resp.code === 0) {
