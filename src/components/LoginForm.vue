@@ -39,7 +39,9 @@ import { reactive, ref } from 'vue';
 import type { ElForm } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { DoLogin, DoRegister } from '@/request/login';
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 type FormInstance = InstanceType<typeof ElForm>
 
 const formData = reactive({
@@ -82,12 +84,12 @@ const submitForm = (formEle: FormInstance) => {
   }
   formEle.validate((valid) => {
     if (valid) {
-      console.log(111111111111111)
       DoLogin(formData.phoneNumber, formData.password).then((resp) => {
         console.log(resp);
         if (resp.code === 0) {
           ElMessage.success('登录成功');
           // TODO redirect to Main page
+          router.push('Main');
         } else {
           ElMessage.error('登录失败，请核对用户名密码');
         }

@@ -1,11 +1,12 @@
 import axios from '@/plugins/axios';
 import {Md5} from 'ts-md5/dist/md5';
 
-
+const md5Encode = (str: string) => {
+    return new Md5().appendStr(str).end();
+}
 
 export const DoLogin = (username: string, originPassword: string) => {
-    const md5 = new Md5();
-    const password = md5.appendStr(originPassword).end();
+    const password = md5Encode(originPassword);
     return axios.post('/user/login', {
             username,
             password,
@@ -13,8 +14,7 @@ export const DoLogin = (username: string, originPassword: string) => {
     )
 }
 export const DoRegister = (username: string, originPassword: string) => {
-    const md5 = new Md5();
-    const password = md5.appendStr(originPassword).end();
+    const password = md5Encode(originPassword);
     return axios.post('/user/register', {
             username,
             password,
