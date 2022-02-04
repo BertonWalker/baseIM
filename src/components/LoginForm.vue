@@ -85,7 +85,6 @@ const submitForm = (formEle: FormInstance) => {
   formEle.validate((valid) => {
     if (valid) {
       DoLogin(formData.phoneNumber, formData.password).then((resp) => {
-        console.log(resp);
         if (resp.code === 0) {
           ElMessage.success('登录成功');
           // TODO redirect to Main page

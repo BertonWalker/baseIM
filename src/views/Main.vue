@@ -12,10 +12,19 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted } from 'vue'
 import MsgInput from '@/components/MsgInput';
+import { Client } from '@/sdk';
+
+let client = null;
+
+onMounted(() => {
+  client = new Client('123456789')
+})
 
 const handleSendStrMsg = (content: string) => {
-  console.log('111111111111', content);
+  client.sendText('777', content)
+
   // TODO  send msg to server
 }
 </script>

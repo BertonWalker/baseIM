@@ -25,7 +25,6 @@ const emit = defineEmits<{
 const textarea = ref('')
 
 const handleInput = (event: KeyboardEvent) => {
-  console.log('+++++++++++', event);
   if(!event.altKey) {
     emit('commit', textarea.value);
     textarea.value = '';
