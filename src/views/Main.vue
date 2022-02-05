@@ -16,14 +16,19 @@ import { onMounted } from 'vue'
 import MsgInput from '@/components/MsgInput';
 import { Client } from '@/sdk';
 
-let client = null;
+let client: Client | undefined;
 
 onMounted(() => {
-  client = new Client('123456789')
+  client = new Client('12400000002')
 })
 
 const handleSendStrMsg = (content: string) => {
-  client.sendText('777', content)
+  if (client)
+  client.sendText('13333333341', content).then(() => {
+    console.log('发送成功');
+  }).catch((err: any) => {
+    console.error('发送失败', err);
+  })
 
   // TODO  send msg to server
 }
