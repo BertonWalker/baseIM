@@ -7,8 +7,9 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
 import * as icons from '@element-plus/icons-vue';
+import { store, key} from './store'
 
-const app = createApp(App);
+const app = createApp(App).use(store, key);
 Object.keys(icons).forEach((key: string) => {
     // @ts-ignore
     app.component(key, icons[key]);

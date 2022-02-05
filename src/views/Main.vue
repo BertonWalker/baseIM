@@ -2,7 +2,7 @@
   <el-container class="common-layout">
     <el-aside width="200px">Aside</el-aside>
     <el-container>
-      <el-header>Header</el-header>
+      <el-header>{{ store.state.userId }}</el-header>
       <el-main>Main</el-main>
       <el-footer>
         <MsgInput @commit="handleSendStrMsg" />
@@ -15,12 +15,28 @@
 import { onMounted } from 'vue'
 import MsgInput from '@/components/MsgInput';
 import { Client } from '@/sdk';
+import { useStore } from "vuex";
+import { key } from '@/store'
+import {useRouter} from "vue-router";
 
 let client: Client | undefined;
+const store = useStore(key);
+const router = useRouter();
+
 
 onMounted(() => {
-  client = new Client('12400000002')
+  // const userId = computed(
+  //     mapGetters(['getUserId']).getUserId.bind({ $store: store })
+  // )
+  if (!store.state.userId) {
+    router.push('/');
+    return;
+  }
+  console.log(store.state.userId);
+  client = new Client(store.state.userId)
 })
+
+
 
 const handleSendStrMsg = (content: string) => {
   if (client)

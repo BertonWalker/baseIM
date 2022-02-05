@@ -40,8 +40,13 @@ import type { ElForm } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { DoLogin, DoRegister } from '@/request/login';
 import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import { key } from '@/store'
 
+const store = useStore(key);
 const router = useRouter();
+
+
 type FormInstance = InstanceType<typeof ElForm>
 
 const formData = reactive({
@@ -86,8 +91,8 @@ const submitForm = (formEle: FormInstance) => {
     if (valid) {
       DoLogin(formData.phoneNumber, formData.password).then((resp) => {
         if (resp.code === 0) {
+          store.commit({type: 'setGetUserId', userId: formData.phoneNumber})
           ElMessage.success('登录成功');
-          // TODO redirect to Main page
           router.push('Main');
         } else {
           ElMessage.error('登录失败，请核对用户名密码');
