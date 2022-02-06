@@ -1,5 +1,5 @@
 import {io, Socket} from 'socket.io-client';
-import {AuthMsg, Msg, TextMsg} from '@/sdk/msg';
+import {AuthMsg, Msg, TextMsg, RecvMsg, RecvTextMsg, EmitTextMsg} from '@/sdk/msg';
 import { timestampToTime } from './lib';
 
 interface MsgCache {
@@ -25,7 +25,7 @@ export class Client {
                 this.log('Auth success');
             });
         })
-        this.client.on('message', this.onMessage.bind(this))
+        this.client.on('message', this.onSocketMessage.bind(this))
         this.client.connect();
 
     }
@@ -35,11 +35,11 @@ export class Client {
         return this.send(authStr);
     }
 
-    private onMessage(msg: string) {
+    private onSocketMessage(msg: string) {
         this.log('recv a msg: ' + msg);
         let MsgLite = null;
         try {
-            MsgLite = JSON.parse(msg);
+            MsgLite = JSON.parse(msg) as RecvMsg;
         } catch (e) {
             console.log(`receive an unknown msg: `, msg);
             return;
@@ -55,9 +55,17 @@ export class Client {
             } else {
                 msg.reject({code: MsgLite.code});
             }
-            clearTimeout(MsgLite.failTimeout)
+            clearTimeout(msg.failTimeout)
         } else {
             // TODO server push msg
+            switch (MsgLite.type) {
+                case 2:
+                    this.processRecvTextMsg(MsgLite as RecvTextMsg);
+                    break;
+                default: break;
+            }
+
+
         }
     }
 
@@ -78,6 +86,16 @@ export class Client {
 
     }
 
+    private processRecvTextMsg(msgLite: RecvTextMsg) {
+        const { type, msgSender, msgReceiver, content, msgVersion } = msgLite;
+        const emitMsg = new EmitTextMsg(type, msgSender, msgReceiver, content, msgVersion)
+        this.onMessage(emitMsg);
+    }
+
+    onMessage(msg: any) {
+
+    }
+
     cleanMsgMap(clientNumber: number) {
         if(this.msgMap.has(clientNumber)) {
             const map = this.msgMap.get(clientNumber);
@@ -92,6 +110,6 @@ export class Client {
 
     private log(content: string){
 
-        console.log(`[${timestampToTime()}]  send msg: ${content}`);
+        console.log(`[${timestampToTime()}] ${content}`);
     }
 }

@@ -1,4 +1,4 @@
-import { encode } from "js-base64";
+import { encode, decode } from "js-base64";
 let id = 0;
 // 1 鉴权消息 2 文本消息   2图片消息 3 文件消息   7 呼叫
 export class Msg {
@@ -34,4 +34,33 @@ export class TextMsg extends Msg{
     }
 }
 
+export class EmitTextMsg {
+    msgVersion: number;
+    type: number;
+    msgSender: string;
+    msgReceiver: string;
+    content: string;
+    constructor(type: number, msgSender: string, msgReceiver: string, content: string, msgVersion: number) {
+        this.type = type;
+        this.msgSender = msgSender;
+        this.msgReceiver = msgReceiver;
+        this.content = decode(content);
+        this.msgVersion = msgVersion
+    }
+}
+
+export interface RecvMsg {
+    type: number,
+    msgSender: string,
+    msgReceiver: string,
+    clientNumber?: number,
+    code?: number,
+}
+
+
+
+export interface RecvTextMsg extends RecvMsg {
+    msgVersion: number,
+    content: string
+}
 

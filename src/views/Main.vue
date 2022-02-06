@@ -3,7 +3,9 @@
     <el-aside width="200px">Aside</el-aside>
     <el-container>
       <el-header>{{ store.state.userId }}</el-header>
-      <el-main>Main</el-main>
+      <el-main class="chat-window">
+        <MsgWindow />
+      </el-main>
       <el-footer>
         <MsgInput @commit="handleSendStrMsg" />
       </el-footer>
@@ -14,6 +16,7 @@
 <script lang="ts" setup>
 import { onMounted } from 'vue'
 import MsgInput from '@/components/MsgInput';
+import MsgWindow from '@/components/MsgWindow';
 import { Client } from '@/sdk';
 import { useStore } from "vuex";
 import { key } from '@/store'
@@ -70,7 +73,7 @@ const handleSendStrMsg = (content: string) => {
 }
 
 .common-layout .el-main {
-  background-color: #e9eef3;
+  background-color: #FFF;
   color: var(--el-text-color-primary);
   text-align: center;
   line-height: 160px;
@@ -88,4 +91,5 @@ const handleSendStrMsg = (content: string) => {
 .common-layout .el-container:nth-child(7) .el-aside {
   line-height: 320px;
 }
+
 </style>
