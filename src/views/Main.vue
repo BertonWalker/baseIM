@@ -28,15 +28,18 @@ const router = useRouter();
 
 
 onMounted(() => {
-  // const userId = computed(
-  //     mapGetters(['getUserId']).getUserId.bind({ $store: store })
-  // )
   if (!store.state.userId) {
     router.push('/');
     return;
   }
-  console.log(store.state.userId);
   client = new Client(store.state.userId)
+  client.onConnect = () => {
+    console.log('连接服务成功');
+  }
+
+  client.onDisonnect = (reason: any) => {
+    console.log('服务断开，请检查网络', reason);
+  }
 })
 
 

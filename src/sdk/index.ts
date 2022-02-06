@@ -2,6 +2,8 @@ import {io, Socket} from 'socket.io-client';
 import {AuthMsg, Msg, TextMsg, RecvMsg, RecvTextMsg, EmitTextMsg} from '@/sdk/msg';
 import { timestampToTime } from './lib';
 
+import {IM} from './IM';
+
 interface MsgCache {
     resolve: Function,
     reject: Function,
@@ -10,24 +12,23 @@ interface MsgCache {
 
 export class Client {
     userId: string;
-
-    private client: Socket;
-    private msgMap = new Map();
+    private client: IM;
 
     constructor(userId: string) {
         this.userId = userId;
-        this.client = io('ws://localhost:8888', {
-            reconnectionDelayMax: 10000,
-        })
+        this.client = new IM(userId);
         this.client.on('connect', () => {
-            console.log('socket has connected');
             this.auth().then(() => {
-                this.log('Auth success');
+                console.log('Auth success');
+                this.onConnect();
             });
         })
-        this.client.on('message', this.onSocketMessage.bind(this))
-        this.client.connect();
-
+        this.client.on('message', (msg: any) => {
+            this.onMessage(msg);
+        })
+        this.client.on('disconnect', (reason: Socket.DisconnectReason) => {
+            this.onDisonnect(reason);
+        })
     }
 
     private auth() {
@@ -35,72 +36,19 @@ export class Client {
         return this.send(authStr);
     }
 
-    private onSocketMessage(msg: string) {
-        this.log('recv a msg: ' + msg);
-        let MsgLite = null;
-        try {
-            MsgLite = JSON.parse(msg) as RecvMsg;
-        } catch (e) {
-            console.log(`receive an unknown msg: `, msg);
-            return;
-        }
-        // TODO msg processor
-        if (Number.isInteger(MsgLite.clientNumber)) {
-            const msg = <MsgCache>this.msgMap.get(MsgLite.clientNumber);
-            if (!msg) {
-                return;
-            }
-            if (MsgLite.code === 0) {
-                msg.resolve()
-            } else {
-                msg.reject({code: MsgLite.code});
-            }
-            clearTimeout(msg.failTimeout)
-        } else {
-            // TODO server push msg
-            switch (MsgLite.type) {
-                case 2:
-                    this.processRecvTextMsg(MsgLite as RecvTextMsg);
-                    break;
-                default: break;
-            }
-
-
-        }
-    }
 
     private send(msg: Msg) {
-        return new Promise((resolve, reject) => {
-            const str = JSON.stringify(msg);
-            this.log(str);
-            this.client.send(str);
-            const failTimeout = setTimeout(() => {
-                // this.cleanMsgMap(msg.clientNumber);
-                this.msgMap.delete(msg.clientNumber);
-                reject({code: 101, msg: 'timeout'});
-            }, 30 * 1000);
-            this.msgMap.set(msg.clientNumber, <MsgCache>{
-                resolve, reject, failTimeout
-            })
-        })
-
-    }
-
-    private processRecvTextMsg(msgLite: RecvTextMsg) {
-        const { type, msgSender, msgReceiver, content, msgVersion } = msgLite;
-        const emitMsg = new EmitTextMsg(type, msgSender, msgReceiver, content, msgVersion)
-        this.onMessage(emitMsg);
+        return this.client.send(msg);
     }
 
     onMessage(msg: any) {
-
+        console.log('client: onMessage', msg);
     }
-
-    cleanMsgMap(clientNumber: number) {
-        if(this.msgMap.has(clientNumber)) {
-            const map = this.msgMap.get(clientNumber);
-
-        }
+    onConnect() {
+        console.log('client: onConnect');
+    }
+    onDisonnect(reason: Socket.DisconnectReason) {
+        console.log('client: onDisonnect');
     }
 
     sendText(userId: string, content: string) {
@@ -108,8 +56,4 @@ export class Client {
         return this.send(sendStr);
     }
 
-    private log(content: string){
-
-        console.log(`[${timestampToTime()}] ${content}`);
-    }
 }
