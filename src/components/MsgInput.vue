@@ -25,10 +25,12 @@ const emit = defineEmits<{
 const textarea = ref('')
 
 const handleInput = (event: KeyboardEvent) => {
-  if(!event.altKey) {
-    emit('commit', textarea.value);
+  const content = textarea.value.trim();
+  if(!event.altKey && content) {
+    emit('commit', content);
     textarea.value = '';
   }
+
 }
 //
 // defineExpose({

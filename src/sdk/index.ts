@@ -1,5 +1,5 @@
 import {io, Socket} from 'socket.io-client';
-import {AuthMsg, Msg, TextMsg, RecvMsg, RecvTextMsg, EmitTextMsg} from '@/sdk/msg';
+import {AuthMsg, Msg, TextMsg, FriendListMsg, EmitTextMsg, FriendListResp} from '@/sdk/msg';
 import { timestampToTime } from './lib';
 
 import {IM} from './IM';
@@ -22,6 +22,10 @@ export class Client {
                 console.log('Auth success');
                 this.onConnect();
             });
+
+            this.getFrendList().then((resp) => {
+                this.onFriendList(resp as FriendListResp[]);
+            })
         })
         this.client.on('message', (msg: any) => {
             this.onMessage(msg);
@@ -36,12 +40,17 @@ export class Client {
         return this.send(authStr);
     }
 
+    private getFrendList() {
+        const frendListStr = new FriendListMsg();
+        return this.send(frendListStr);
+    }
+
 
     private send(msg: Msg) {
         return this.client.send(msg);
     }
 
-    onMessage(msg: any) {
+    onMessage(msg: EmitTextMsg) {
         console.log('client: onMessage', msg);
     }
     onConnect() {
@@ -49,6 +58,9 @@ export class Client {
     }
     onDisonnect(reason: Socket.DisconnectReason) {
         console.log('client: onDisonnect');
+    }
+    onFriendList(friendList: FriendListResp[]) {
+        console.log('client: onFrendList');
     }
 
     sendText(userId: string, content: string) {

@@ -1,45 +1,51 @@
 <template>
   <el-scrollbar ref="scrollbarRef" height="500px" always @scroll="scroll">
     <div ref="innerRef">
-<!--      <p v-for="item in 20" :key="item" class="scrollbar-demo-item">-->
-<!--        {{ item }}-->
-<!--      </p>-->
-      <MsgSender v-for="item in 20" :key="item">{{ item }}</MsgSender>
-      <MsgReceiver v-for="item in 20" :key="item">{{ item }}</MsgReceiver>
+      <template v-for="(item, index) in props.msgList" :key="index">
+        <MsgTab v-if="item" :msgVersion="item.msgVersion" :content="item.content" :is-sender="item.isSender"/>
+      </template>
     </div>
   </el-scrollbar>
 
-  <el-slider
-      v-model="value"
-      :max="max"
-      :format-tooltip="formatTooltip"
-      @input="inputSlider"
-  ></el-slider>
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref } from 'vue';
-import type { ElScrollbar } from 'element-plus';
-import MsgSender from './MsgSender';
-import MsgReceiver from './MsgReceiver';
+import {onMounted, ref, defineProps, watch} from 'vue';
+import type {ElScrollbar} from 'element-plus';
+import MsgTab from './MsgTab.vue';
+
 
 const max = ref(0)
 const value = ref(0)
 const innerRef = ref<HTMLDivElement>()
 const scrollbarRef = ref<InstanceType<typeof ElScrollbar>>()
 
-onMounted(() => {
-  max.value = innerRef.value!.clientHeight - 380
+
+interface Msg {
+  msgVersion: number
+  content: string
+  isSender?: boolean
+}
+
+
+const props = defineProps<{ msgList: Msg[] }>()
+
+watch(props, () => {
+  console.log('msgwindow props changed ::::', props.msgList);
+  max.value = innerRef.value!.clientHeight - 380;
+  inputSlider(max.value)
 })
 
+onMounted(() => {
+  max.value = innerRef.value!.clientHeight - 380;
+})
+
+// eslint-disable-next-line no-unused-vars
 const inputSlider = (value: number) => {
   scrollbarRef.value!.setScrollTop(value)
 }
-const scroll = ({ scrollTop }) => {
+const scroll = ({scrollTop}) => {
   value.value = scrollTop
-}
-const formatTooltip = (value: number) => {
-  return `${value} px`
 }
 
 </script>

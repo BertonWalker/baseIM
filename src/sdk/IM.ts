@@ -2,18 +2,13 @@ import {io, Socket} from 'socket.io-client';
 import {AuthMsg, Msg, TextMsg, RecvMsg, RecvTextMsg, EmitTextMsg} from '@/sdk/msg';
 import { timestampToTime } from './lib';
 import {DefaultEventsMap, Emitter, EventsMap} from "@socket.io/component-emitter";
-
+import { SocketReservedEvents } from './SocketEvents';
 interface MsgCache {
     resolve: Function,
     reject: Function,
     failTimeout: number,
 }
 
-interface SocketReservedEvents {
-    connect: () => void;
-    connect_error: (err: Error) => void;
-    disconnect: (reason: Socket.DisconnectReason) => void;
-}
 
 export class IM<ListenEvents extends EventsMap = DefaultEventsMap, EmitEvents extends EventsMap = ListenEvents> extends Emitter<ListenEvents, EmitEvents, SocketReservedEvents>{
     userId: string;
@@ -24,7 +19,7 @@ export class IM<ListenEvents extends EventsMap = DefaultEventsMap, EmitEvents ex
     constructor(userId: string) {
         super();
         this.userId = userId;
-        this.client = io('ws://localhost:8888', {
+        this.client = io('ws://localhost:8886', {
             reconnectionDelayMax: 10000,
         })
         this.client.on('connect', () => {
@@ -49,14 +44,19 @@ export class IM<ListenEvents extends EventsMap = DefaultEventsMap, EmitEvents ex
             console.log(`receive an unknown msg: `, msg);
             return;
         }
-        // TODO msg processor
-        if (Number.isInteger(MsgLite.clientNumber)) {
+        // process msg from server
+        if (Number.isInteger(MsgLite.clientNumber)) { // 如果有clientNumber  则为客户端主动发起的消息，需匹配对应的回调处理。
             const msg = <MsgCache>this.msgMap.get(MsgLite.clientNumber);
             if (!msg) {
+                console.warn('receive an un expect msg'); // 可能收到消息的时候已经超时，回调被移除了。
                 return;
             }
             if (MsgLite.code === 0) {
-                msg.resolve()
+                if (MsgLite.data) {
+                    msg.resolve(MsgLite.data);
+                } else {
+                    msg.resolve();
+                }
             } else {
                 msg.reject({code: MsgLite.code});
             }
@@ -92,11 +92,8 @@ export class IM<ListenEvents extends EventsMap = DefaultEventsMap, EmitEvents ex
     private processRecvTextMsg(msgLite: RecvTextMsg) {
         const { type, msgSender, msgReceiver, content, msgVersion } = msgLite;
         const emitMsg = new EmitTextMsg(type, msgSender, msgReceiver, content, msgVersion)
-        this.onMessage(emitMsg);
-    }
-
-    onMessage(msg: any) {
-
+        // @ts-ignore
+        this.emit('message', emitMsg);
     }
 
     cleanMsgMap(clientNumber: number) {
